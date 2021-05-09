@@ -65,7 +65,7 @@ func (h *userHandler) Login(c *gin.Context) {
 	if err != nil {
 		errorMessage := gin.H{"error": err.Error()}
 
-		response := helper.ApiResponse("login faile", http.StatusUnprocessableEntity, "error", errorMessage)
+		response := helper.ApiResponse("login failed", http.StatusUnprocessableEntity, "error", errorMessage)
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
@@ -74,4 +74,45 @@ func (h *userHandler) Login(c *gin.Context) {
 
 	response := helper.ApiResponse("Sukses login", http.StatusOK, "sukses", formater)
 	c.JSON(http.StatusOK, response)
+}
+
+func (h *userHandler) CheckEmailAvailable(c *gin.Context) {
+	// ada input email dari user
+	// input email di mapping ke struct input
+	// struct input di pasing ke service
+	// service akan memanggil repository - email sudah ada atau belom
+	// repository akan melakukan query ke database
+
+	var input user.CheckEmailInput
+
+	err := c.ShouldBindJSON(&input)
+	if err != nil {
+		errors := helper.FormatValidationError(err)
+		errorMessage := gin.H{"error": errors}
+
+		response := helper.ApiResponse("Email checking faile", http.StatusUnprocessableEntity, "error", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	isEmailAvailable, err := h.userService.IsEmailAvailable(input)
+	if err != nil {
+		errorMessage := gin.H{"error": "Server error"}
+		response := helper.ApiResponse("Email checking faile", http.StatusUnprocessableEntity, "error", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+	data := gin.H{
+		"is_available": isEmailAvailable,
+	}
+
+	var metaMessage string
+	if isEmailAvailable {
+		metaMessage = "email available"
+	} else {
+		metaMessage = "email has been register"
+	}
+	response := helper.ApiResponse(metaMessage, http.StatusOK, "error", data)
+	c.JSON(http.StatusOK, response)
+
 }
