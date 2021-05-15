@@ -149,8 +149,8 @@ func (h *userHandler) UploadAvatar(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
-
-	userId := 1
+	currentUser := c.MustGet("currentUser").(user.User)
+	userId := currentUser.Id
 
 	//path := "images/" + file.Filename
 	path := fmt.Sprint("images/", userId, "-", file.Filename)
