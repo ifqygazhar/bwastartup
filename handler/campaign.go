@@ -38,7 +38,7 @@ func (h *campaignHandler) GetCampaigns(c *gin.Context) {
 
 	response := helper.ApiResponse("List of campaign", http.StatusOK, "succes", campaign.FormatCampaigns(campaigns))
 	c.JSON(http.StatusOK, response)
-	return
+
 }
 
 func (h *campaignHandler) GetCampaign(c *gin.Context) {
@@ -65,7 +65,7 @@ func (h *campaignHandler) GetCampaign(c *gin.Context) {
 
 	response := helper.ApiResponse("Dtail campaign", http.StatusOK, "succes", campaign.FormatCampaignDetail(campaignDetail))
 	c.JSON(http.StatusOK, response)
-	return
+
 }
 
 // tangkap parameter dari user ke input struct
@@ -97,5 +97,47 @@ func (h *campaignHandler) CreateCampaign(c *gin.Context) {
 	}
 	response := helper.ApiResponse("succes to create campaign", http.StatusOK, "succes", campaign.FormatCampaign(newCampaign))
 	c.JSON(http.StatusOK, response)
-	return
+
+}
+
+//user masukan input
+// handler menangkap input
+//mapping dari input ke input struct (ada 2)
+//service butuh parameter input dari user dan uri
+//repository update data campaign
+
+func (h *campaignHandler) UpdateCampaign(c *gin.Context) {
+	var inputId campaign.GetCampaignDetailInput
+
+	err := c.ShouldBindUri(&inputId)
+	if err != nil {
+		response := helper.ApiResponse("Error to update detail campaign", http.StatusBadRequest, "error", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+	var inputData campaign.CreateCampaignInput
+	err = c.ShouldBindJSON(&inputData)
+
+	if err != nil {
+		errors := helper.FormatValidationError(err)
+		errorMessage := gin.H{"error": errors}
+
+		response := helper.ApiResponse("Fail to create campaign", http.StatusBadRequest, "error", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	currentUser := c.MustGet("currentUser").(user.User)
+
+	inputData.User = currentUser
+
+	updateCampaign, err := h.service.UpdateCampaign(inputId, inputData)
+	if err != nil {
+		response := helper.ApiResponse("Error to update detail campaign", http.StatusBadRequest, "error", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+	response := helper.ApiResponse("succes to update campaign", http.StatusOK, "succes", campaign.FormatCampaign(updateCampaign))
+	c.JSON(http.StatusOK, response)
+
 }
