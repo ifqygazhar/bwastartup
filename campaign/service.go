@@ -9,9 +9,10 @@ import (
 
 type Service interface {
 	GetCampaigns(UserId int) ([]Campaign, error)
-	GetCampaignById(Input GetCampaignDetailInput) (Campaign, error)
+	GetCampaignById(input GetCampaignDetailInput) (Campaign, error)
 	CreateCampaign(input CreateCampaignInput) (Campaign, error)
-	UpdateCampaign(InputId GetCampaignDetailInput, InputData CreateCampaignInput) (Campaign, error)
+	UpdateCampaign(inputId GetCampaignDetailInput, InputData CreateCampaignInput) (Campaign, error)
+	SaveCampaignimage(input CreateCampaignImageInput, fileLocation string) (CampaignImage, error)
 }
 
 type service struct {
@@ -41,8 +42,8 @@ func (s *service) GetCampaigns(UserId int) ([]Campaign, error) {
 
 }
 
-func (s *service) GetCampaignById(Input GetCampaignDetailInput) (Campaign, error) {
-	campaign, err := s.repository.FindById(Input.Id)
+func (s *service) GetCampaignById(input GetCampaignDetailInput) (Campaign, error) {
+	campaign, err := s.repository.FindById(input.Id)
 	if err != nil {
 		return campaign, err
 	}
@@ -71,25 +72,54 @@ func (s *service) CreateCampaign(input CreateCampaignInput) (Campaign, error) {
 	return newCampaign, nil
 }
 
-func (s *service) UpdateCampaign(InputId GetCampaignDetailInput, InputData CreateCampaignInput) (Campaign, error) {
+func (s *service) UpdateCampaign(InputId GetCampaignDetailInput, inputData CreateCampaignInput) (Campaign, error) {
 	campaign, err := s.repository.FindById(InputId.Id)
 	if err != nil {
 		return campaign, err
 	}
 
-	if campaign.UserId != InputData.User.Id {
+	if campaign.UserId != inputData.User.Id {
 		return campaign, errors.New("Not an owner of the campaign")
 	}
 
-	campaign.Name = InputData.Name
-	campaign.ShortDescription = InputData.ShortDescription
-	campaign.Description = InputData.Description
-	campaign.Perks = InputData.Perks
-	campaign.GoalAmount = InputData.GoalAmount
+	campaign.Name = inputData.Name
+	campaign.ShortDescription = inputData.ShortDescription
+	campaign.Description = inputData.Description
+	campaign.Perks = inputData.Perks
+	campaign.GoalAmount = inputData.GoalAmount
 
 	updateCampaign, err := s.repository.Update(campaign)
 	if err != nil {
 		return updateCampaign, err
 	}
 	return updateCampaign, nil
+}
+
+func (s *service) SaveCampaignimage(input CreateCampaignImageInput, fileLocation string) (CampaignImage, error) {
+	campaign, err := s.repository.FindById(input.CampaignId)
+	if err != nil {
+		return CampaignImage{}, err
+	}
+	if campaign.UserId != input.User.Id {
+		return CampaignImage{}, errors.New("Not an owner of the campaign")
+	}
+	isPrimary := 0
+	if input.IsPrimary {
+		isPrimary = 1
+		_, err := s.repository.MarkAllImageAsNotPrimary(input.CampaignId)
+		if err != nil {
+			return CampaignImage{}, err
+		}
+	}
+
+	campaignImage := CampaignImage{}
+	campaignImage.CampaignId = input.CampaignId
+	campaignImage.IsPrimary = isPrimary
+	campaignImage.FileName = fileLocation
+
+	newCampaignImage, err := s.repository.CreateImage(campaignImage)
+	if err != nil {
+		return newCampaignImage, err
+	}
+	return newCampaignImage, nil
 }
