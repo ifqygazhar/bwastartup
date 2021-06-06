@@ -12,6 +12,7 @@ type service struct {
 
 type Service interface {
 	GetTransactionByCampaignId(input GetTransactionCampaignDetailInput) ([]Transaction, error)
+	GetTransactionByUserId(userId int) ([]Transaction, error)
 }
 
 func NewService(repository Repository, campaignRepository campaign.Repository) *service {
@@ -27,6 +28,14 @@ func (s *service) GetTransactionByCampaignId(input GetTransactionCampaignDetailI
 		return []Transaction{}, errors.New("Not an owner of the campaign")
 	}
 	transaction, err := s.repository.GetByCampaignId(input.Id)
+	if err != nil {
+		return transaction, err
+	}
+	return transaction, nil
+}
+
+func (s *service) GetTransactionByUserId(userId int) ([]Transaction, error) {
+	transaction, err := s.repository.GetByUserID(userId)
 	if err != nil {
 		return transaction, err
 	}
