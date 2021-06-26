@@ -11,12 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// tangkap paramemter di handler
-// handler ke service
-// service yang menentukan repository mana  yang di call
-// repository baru dia ngakses ke db
-// repository : GetAll, GetByUserId
-
 type campaignHandler struct {
 	service campaign.Service
 }
@@ -24,8 +18,6 @@ type campaignHandler struct {
 func NewCampaignHandler(service campaign.Service) *campaignHandler {
 	return &campaignHandler{service}
 }
-
-// api/v1/campaign
 
 func (h *campaignHandler) GetCampaigns(c *gin.Context) {
 	userId, _ := strconv.Atoi(c.Query("user_id"))
@@ -43,10 +35,6 @@ func (h *campaignHandler) GetCampaigns(c *gin.Context) {
 }
 
 func (h *campaignHandler) GetCampaign(c *gin.Context) {
-	// api/v1/campaign/2
-	// handler : mapping id yang di url ke sturct input => service , call formatter
-	// service : input nya struct input  => mensngkap id di url, manggil repo get campaign id
-	//repository : get campaign id
 
 	var input campaign.GetCampaignDetailInput
 
@@ -69,10 +57,6 @@ func (h *campaignHandler) GetCampaign(c *gin.Context) {
 
 }
 
-// tangkap parameter dari user ke input struct
-// ambil current user dari jwt/handler
-// pangil service paramter nya input struct (dan juga buat slug)
-// panggil repository untuk simpan data campaign baru
 func (h *campaignHandler) CreateCampaign(c *gin.Context) {
 	var input campaign.CreateCampaignInput
 	err := c.ShouldBindJSON(&input)
@@ -100,12 +84,6 @@ func (h *campaignHandler) CreateCampaign(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 
 }
-
-//user masukan input
-// handler menangkap input
-//mapping dari input ke input struct (ada 2)
-//service butuh parameter input dari user dan uri
-//repository update data campaign
 
 func (h *campaignHandler) UpdateCampaign(c *gin.Context) {
 	var inputId campaign.GetCampaignDetailInput
@@ -143,10 +121,6 @@ func (h *campaignHandler) UpdateCampaign(c *gin.Context) {
 
 }
 
-// handler tangkap input dan rubah ke struct input
-// save image
-// service (kondisi msnggil 2 point di repo, panggil repo point satu)
-// repository : create_image/save ke dalam campaign images, ubah is_primary true ke false
 func (h *campaignHandler) UploadImage(c *gin.Context) {
 	var input campaign.CreateCampaignImageInput
 
@@ -172,7 +146,6 @@ func (h *campaignHandler) UploadImage(c *gin.Context) {
 		return
 	}
 
-	//path := "images/" + file.Filename
 	path := fmt.Sprint("images/", userId, "-", file.Filename)
 	err = c.SaveUploadedFile(file, path)
 	if err != nil {

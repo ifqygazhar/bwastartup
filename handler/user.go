@@ -53,11 +53,6 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 }
 
 func (h *userHandler) Login(c *gin.Context) {
-	// user memasukan  input (email & password)
-	// input di tangkap handler
-	// mapping dari input user ke input struct
-	// input struct kita pasing ke service
-	// di service mencari dengan bantuan repository user dengan email X
 
 	var input user.LoginInput
 
@@ -94,11 +89,6 @@ func (h *userHandler) Login(c *gin.Context) {
 }
 
 func (h *userHandler) CheckEmailAvailable(c *gin.Context) {
-	// ada input email dari user
-	// input email di mapping ke struct input
-	// struct input di pasing ke service
-	// service akan memanggil repository - email sudah ada atau belom
-	// repository akan melakukan query ke database
 
 	var input user.CheckEmailInput
 
@@ -135,12 +125,6 @@ func (h *userHandler) CheckEmailAvailable(c *gin.Context) {
 }
 
 func (h *userHandler) UploadAvatar(c *gin.Context) {
-	//tangkap input dari user
-	//simpan gambar di folder "/images"
-	//di service manggil repo
-	//jwt(hardcore, seakan akan user yg login ID = 1)
-	//repo ambil data user = 1
-	//repo update data user simpan lokasi file
 
 	file, err := c.FormFile("avatar")
 	if err != nil {
@@ -152,7 +136,6 @@ func (h *userHandler) UploadAvatar(c *gin.Context) {
 	currentUser := c.MustGet("currentUser").(user.User)
 	userId := currentUser.Id
 
-	//path := "images/" + file.Filename
 	path := fmt.Sprint("images/", userId, "-", file.Filename)
 	err = c.SaveUploadedFile(file, path)
 	if err != nil {
@@ -173,6 +156,16 @@ func (h *userHandler) UploadAvatar(c *gin.Context) {
 
 	data := gin.H{"is_uploaded": true}
 	response := helper.ApiResponse("Avatar has uploaded", http.StatusOK, "sukses", data)
-	c.JSON(http.StatusBadRequest, response)
+	c.JSON(http.StatusOK, response)
 
+}
+
+func (h *userHandler) FecthUser(c *gin.Context) {
+	currentUser := c.MustGet("currentUser").(user.User)
+
+	formatter := user.FormastUser(currentUser, "")
+
+	response := helper.ApiResponse("Succes fecth data user", http.StatusOK, "sukses", formatter)
+
+	c.JSON(http.StatusOK, response)
 }

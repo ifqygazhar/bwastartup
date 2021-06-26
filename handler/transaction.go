@@ -9,12 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// parameter di uri
-// tangkap parameter maping ke input struct
-// panggil service input struct sebagai parameter nya
-// service berbekal campaign id bisa panggil repo
-// repo mencari data transaction suatu campaign
-
 type transactionHandler struct {
 	service transaction.Service
 }
@@ -47,12 +41,6 @@ func (h *transactionHandler) GetCampaignTransaction(c *gin.Context) {
 
 }
 
-//get user transaction
-//handler
-// ambil nilai user dari jwt
-//service
-//repo => ambil data transaction (preload campaign)
-
 func (h *transactionHandler) GetUserTransaction(c *gin.Context) {
 	currentUser := c.MustGet("currentUser").(user.User)
 	userID := currentUser.Id
@@ -64,4 +52,52 @@ func (h *transactionHandler) GetUserTransaction(c *gin.Context) {
 	}
 	response := helper.ApiResponse("User transactions", http.StatusOK, "succes", transaction.FormatUserTransactions(transactions))
 	c.JSON(http.StatusOK, response)
+}
+
+func (h *transactionHandler) CreateTransaction(c *gin.Context) {
+	var input transaction.CreateTransactionInput
+
+	err := c.ShouldBindJSON(&input)
+
+	if err != nil {
+		errors := helper.FormatValidationError(err)
+		errorMessage := gin.H{"error": errors}
+
+		response := helper.ApiResponse("Fail to create transaction", http.StatusBadRequest, "error", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	currentUser := c.MustGet("currentUser").(user.User)
+
+	input.User = currentUser
+
+	newTransaction, err := h.service.CreateTransaction(input)
+
+	if err != nil {
+		response := helper.ApiResponse("Fail to create transaction", http.StatusBadRequest, "error", nil)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+	response := helper.ApiResponse("succes to create transaction", http.StatusOK, "succes", transaction.FormatTransaction(newTransaction))
+	c.JSON(http.StatusOK, response)
+}
+
+func (h *transactionHandler) GetNotification(c *gin.Context) {
+	var input transaction.TransactionNotificationInput
+
+	err := c.ShouldBind(&input)
+	if err != nil {
+		response := helper.ApiResponse("Failed notifiaction proses", http.StatusBadRequest, "error", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	err = h.service.ProsesPayment(input)
+	if err != nil {
+		response := helper.ApiResponse("Failed notifiaction proses", http.StatusBadRequest, "error", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+	c.JSON(http.StatusOK, input)
 }
