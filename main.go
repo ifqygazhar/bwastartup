@@ -21,7 +21,7 @@ import (
 
 func main() {
 	//refer https://github.com/go-sql-driver/mysql#dsn-data-source-name for details
-	dsn := "root:torabikA1#@tcp(127.0.0.1:3306)/bwastartup?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := "root:password@tcp(127.0.0.1:3306)/bwastartup?charset=utf8mb4&parseTime=True&loc=Local"
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	if err != nil {
